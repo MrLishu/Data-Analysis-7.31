@@ -6,8 +6,8 @@ from scipy.fftpack import fft
 from train import model, device
 from datapreprocessing import scaler, encoder, resample_num
 
-
-data = pd.read_csv(r'data\raw\data_train').T
+data = pd.read_csv(r'data\raw\data_test.csv').T
+name = data.index
 data = scaler.transform(data)
 data = data[:, round(data.shape[1] // 20): - round(data.shape[1] // 20)]  # 截取中间90%的数据
 
@@ -24,5 +24,8 @@ data_final_fft = np.log(np.abs(fft(data_final)))
 data = torch.from_numpy(data_final_fft)
 data = data.float().to(device).unsqueeze(dim=1)
 output = model(data).squeeze(-1)
-answer = encoder.inverse_transform(output.cpu().numpy())
+answer = encoder.inverse_transform(output.cpu().detach().numpy().argmax(axis=1))
+
+answer = pd.Series(answer, index=name)
+answer.to_csv(r'data\raw\label_test.csv', header=None)
 

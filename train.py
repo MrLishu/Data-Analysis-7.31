@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.nn.init import xavier_uniform_
 from torch.utils.data import TensorDataset, DataLoader
 from datapreprocessing import data_train_fft, code, scaler, encoder
-from Model import TINet
+from Model import SiameseNet
 
 learning_rate = 0.001
 batch_size = 64
@@ -38,7 +38,8 @@ def weight_init(m):
         m.reset_running_stats()
 
 
-model = TINet(C_in=1, class_num=4).to(device)
+# model = TINet(C_in=1, class_num=4).to(device)
+model = SiameseNet(C_in=1, class_num=4).to(device)
 model.apply(weight_init)
 
 criterion = nn.NLLLoss()  # 损失函数
@@ -81,4 +82,3 @@ for index, (data, label) in enumerate(test_dataloader):
 accuracy = correct / 25
 print(f'Accuracy on test set: {accuracy:.3f}')
 
-exit()
