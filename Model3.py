@@ -17,15 +17,16 @@ class ReverseLayerF(Function):
 
         return output, None
 
+
 class Bottleneck(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None, expansion=1):
         super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, inplanes*expansion, kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(inplanes*expansion)
-        self.conv2 = nn.Conv2d(inplanes*expansion, inplanes*expansion, kernel_size=3, stride=stride,
-                               padding=1, bias=False, groups=inplanes*expansion)
-        self.bn2 = nn.BatchNorm2d(inplanes*expansion)
-        self.conv3 = nn.Conv2d(inplanes*expansion, planes, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv2d(inplanes, inplanes * expansion, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(inplanes * expansion)
+        self.conv2 = nn.Conv2d(inplanes * expansion, inplanes * expansion, kernel_size=3, stride=stride,
+                               padding=1, bias=False, groups=inplanes * expansion)
+        self.bn2 = nn.BatchNorm2d(inplanes * expansion)
+        self.conv3 = nn.Conv2d(inplanes * expansion, planes, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU6(inplace=True)
         self.downsample = downsample
@@ -70,7 +71,6 @@ class MobileNetV2(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))  # Output=50*128*1*1
         self.conv7 = nn.Conv2d(128, class_num, kernel_size=1, stride=1, bias=False)  # fault clssses
 
-
         self.domain_classifier = nn.Sequential(
 
             nn.Linear(in_features=128, out_features=500),
@@ -81,7 +81,6 @@ class MobileNetV2(nn.Module):
         )
 
     def _make_layer(self, block, planes, blocks, stride, expansion):
-
         downsample = nn.Sequential(
             nn.Conv2d(self.inplanes, planes, kernel_size=1, stride=stride, bias=False),
             nn.BatchNorm2d(planes))
@@ -229,7 +228,7 @@ class SiameseNet(nn.Module):
         super(SiameseNet, self).__init__()
         # wdcnn
         self.net = nn.Sequential(
-            nn.Conv1d(in_channels=C_in, out_channels=16, kernel_size=64, stride=16,padding=1),
+            nn.Conv1d(in_channels=C_in, out_channels=16, kernel_size=64, stride=16, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool1d(kernel_size=2, stride=2),
 
@@ -266,7 +265,6 @@ class SiameseNet(nn.Module):
         output = self.fc(output)
         output = self.classifier(output)
         return output
-
 
 
 class TINet(nn.Module):
@@ -308,6 +306,7 @@ class TINet(nn.Module):
         features = features.view(features.size(0), -1)
         out = self.classifier(features)
         return out
+
 
 if __name__ == '__main__':
     print(MobileNetV2(Bottleneck, 10))

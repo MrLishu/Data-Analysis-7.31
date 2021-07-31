@@ -2,12 +2,13 @@ import torch
 import numpy as np
 import torch.nn as nn
 import argparse
-from Model3 import WDCNN, SiameseNet, TINet
+from Model import TINet
 from torch.nn.init import xavier_uniform_
 import torch.utils.data as Data
 import matplotlib.pylab as plt
 import csv
 import codecs
+
 
 def data_write_csv(file_name, datas):  # file_name为写入CSV文件的路径，datas为要写入数据列表
     file_csv = codecs.open(file_name, 'w+', 'utf-8')  # 追加
@@ -16,10 +17,11 @@ def data_write_csv(file_name, datas):  # file_name为写入CSV文件的路径，
         writer.writerow(data)
     print("保存文件成功，处理结束")
 
+
 # model initialization  参数初始化
 def weight_init(m):
-    class_name = m.__class__.__name__  #得到网络层的名字
-    if class_name.find('Conv') != -1:   # 使用了find函数，如果不存在返回值为-1，所以让其不等于-1
+    class_name = m.__class__.__name__  # 得到网络层的名字
+    if class_name.find('Conv') != -1:  # 使用了find函数，如果不存在返回值为-1，所以让其不等于-1
         xavier_uniform_(m.weight.data)
     if class_name.find('Linear') != -1:
         xavier_uniform_(m.weight.data)
@@ -29,8 +31,8 @@ def weight_init(m):
     #     nn.init.constant_(m.weight, 1)
     #     nn.init.constant_(m.bias, 0)
 
-# BN layer initialization
 
+# BN layer initialization
 
 
 # split train and split data
@@ -83,34 +85,32 @@ def train(train_dataset, val_dataset, batchsize):
     val_dataloader = Data.DataLoader(val_dataset, batch_size=int(batchsize / 2), shuffle=False)
 
     val_loss = []
-    lossData = [[]]
-    accData = [[]]
     for epoch in range(args.epochs):
         model.train()
         for index, (data, label) in enumerate(train_dataloader):
             data = data.float().to(device).unsqueeze(dim=1)
             label = label.long().to(device)
-            output = model(data).squeeze(-1)   ##########
+            output = model(data).squeeze(-1)  ##########
             # print('output', output.shape)
-            loss = criterion(output, label)   # 交叉熵函数 用来判定实际的输出与期望的输出的接近程度 实际输出（概率）与期望输出（概率）的距离，也就是交叉熵的值越小，两个概率分布就越接近
+            loss = criterion(output, label)  # 交叉熵函数 用来判定实际的输出与期望的输出的接近程度 实际输出（概率）与期望输出（概率）的距离，也就是交叉熵的值越小，两个概率分布就越接近
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            pred = torch.argmax(output.data, 1)   # 返回指定维度最大值的序号 dim=1
+            pred = torch.argmax(output.data, 1)  # 返回指定维度最大值的序号 dim=1
             correct = pred.eq(label).cpu().sum()
             acc = 100. * correct.item() / len(data)
-            if index % 2 == 0:    # 假
+            if index % 2 == 0:  # 假
                 print('Train Epoch: {}/{} [{}/{}] \t Loss: {:.6f} Acc: {:.6f}%'.
                       format(epoch, args.epochs, [(index + 1) * batchsize if len(data) == batchsize else length][0],
-                             length, loss.item(), acc))       # batchsize=100
+                             length, loss.item(), acc))  # batchsize=100
 
         # validation
         model.eval()
         correct_val = 0
         sum_loss = 0
         length_val = len(val_dataset)
-        for index, (data_val, label_val)in enumerate(val_dataloader):
+        for index, (data_val, label_val) in enumerate(val_dataloader):
             with torch.no_grad():
                 data_val = data_val.float().to(device).unsqueeze(dim=1)
                 label_val = label_val.long().to(device)
@@ -135,6 +135,7 @@ def train(train_dataset, val_dataset, batchsize):
     # data_write_csv(".\\loss_1d_LinGang.csv", lossData)
     # data_write_csv(".\\acc_1d_LinGang.csv", accData)
 
+
 # testing
 def tst(test_dataset_s):
     model.eval()
@@ -146,7 +147,7 @@ def tst(test_dataset_s):
             data = data.float().to(device)
             label = label.long().to(device)
 
-            output = model(data.unsqueeze(dim=1)).squeeze(-1)   ###########
+            output = model(data.unsqueeze(dim=1)).squeeze(-1)  ###########
             pred = torch.argmax(output.data, 1)
             correct += pred.eq(label).cpu().sum()
 
@@ -165,9 +166,9 @@ if __name__ == '__main__':
     device = torch.device(device)
 
     # load data
-    dataset_s_train = np.load(r'E:\competition\AnalysisData\data_1024.npy', allow_pickle=True)
-    label_s_train = np.load(r'E:\competition\AnalysisData\data_512_labels.npy', allow_pickle=True)
-    dataset_s_train = dataset_s_train.transpose((1, 0))  # 转置
+    dataset_s_train = np.load(r'data\processed\1024.npy', allow_pickle=True)
+    label_s_train = np.load(r'data\processed\1024labels.npy', allow_pickle=True)
+    # dataset_s_train = dataset_s_train.transpose((1, 0))  # 转置
     data1 = []
     for i in range(120):
         a = label_s_train[i, :]
@@ -201,17 +202,17 @@ if __name__ == '__main__':
     # label_s_test = label_s_test.reshape(1, -1)   #转化成一行
 
     # # set hyper-parameters 创建 ArgumentParser() 对象
-    parser = argparse.ArgumentParser(description='standard training')   # 在参数帮助文档之前显示的文本
+    parser = argparse.ArgumentParser(description='standard training')  # 在参数帮助文档之前显示的文本
     # 调用 add_argument() 方法添加参数
     parser.add_argument('--epochs', type=int, default=200, help='number of training epochs')
     parser.add_argument('--iterations', type=int, default=1, help='number of iteration')
     parser.add_argument('--batch_size', type=int, default=100, help='training batch_size')
     parser.add_argument('--lr', type=float, default=0.0005, help='learning rate')
-    args = parser.parse_args()   # 解析添加的参数
+    args = parser.parse_args()  # 解析添加的参数
     # repeat several times for an average result
     for iteration in range(args.iterations):
         # load model
-        model = TINet(C_in=1, class_num=4).to(device)    #######################
+        model = TINet(C_in=1, class_num=4).to(device)  #
         model.apply(weight_init)
         # 划分训练集和验证集
         data_s_train, data_s_val, label_s_train, label_s_val = data_split_train(data_s_train_val, label_s_train_val)
@@ -227,7 +228,7 @@ if __name__ == '__main__':
         val_dataset_s = Data.TensorDataset(torch_data_val, torch_label_val)
         test_dataset_s = Data.TensorDataset(torch_data_test, torch_label_test.squeeze())
 
-        criterion = nn.NLLLoss()   # 损失函数
+        criterion = nn.NLLLoss()  # 损失函数
         train(train_dataset_s, val_dataset_s, args.batch_size)
         acc = tst(test_dataset_s)
         iteration_acc.append(acc)

@@ -1,50 +1,42 @@
-import os
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 import scipy.signal as signal
 from scipy.fftpack import fft
 
-
 resample_num = 1024
+path = r'data\raw\data_train.csv'
 
-def proprecessing(path, resample_num):
-    data_train = np.empty([resample_num, 120])
-    data1 = pd.read_csv(path)
-    for j in range(120):
-            data2 = data1.iloc[1:, j]
+data_train = np.empty([120, resample_num])
+data = pd.read_csv(path).T
 
-            scaler = preprocessing.StandardScaler()
-            data2 = np.array(data2).reshape(-1, 1)
-            data2 = scaler.fit_transform(data2.reshape(-1, 1))
-            data2 = data2.reshape(-1)
+scaler = preprocessing.StandardScaler()
+processed_data = scaler.fit_transform(data)
+cut_data = processed_data[:, round(data.shape[1] // 20): - round(data.shape[1] // 20)]  # 截取中间90%的数据
 
-            data2 = data2[round(data2.shape[0] // 20): - round(data2.shape[0] // 20)]
-            # 截取中间90%的数据
-            d = signal.resample(data2, resample_num)
-            # 重采样, 数据长度resample_num = 512
+for i in range(120):
+    sample = processed_data[i]
 
-            data_train[ :, j] = d
+    # 重采样, 数据长度resample_num = 512
+    resample = signal.resample(sample, resample_num)
+    data_train[i] = resample
 
-            # 进行FFT，获得频域数据
-            data_train_fft = fft(data_train)
+# 进行FFT，获得频域数据
+data_train_fft = np.log(np.abs(fft(data_train)))
 
-            print([j])
-    # print(data_train.shape)
-    print('data_train', data_train.shape)
-    print('data_train_fft', data_train_fft.shape)
+print('data_train', data_train.shape)
+print('data_train_fft', data_train_fft.shape)
 
-    np.save(r'E:\competition\AnalysisData\data' + '_' + str(resample_num) + '.npy', data_train)
-    np.save(r'E:\competition\AnalysisData\data' + '_' + str(resample_num) + 'fft.npy', data_train_fft)
+np.save(rf'data\processed\{resample_num}.npy', data_train)
+np.save(rf'data\processed\{resample_num}fft.npy', data_train_fft)
 
+# 加载label
+path_with_f_name = r'data\raw\label_train.csv'
 
-def get_labels(path_with_f_name, resample_num):
-    data0 = pd.read_csv(path_with_f_name, header=None, usecols=[1])
-    print('data0', data0.shape)
-    np.save(r'E:\competition\AnalysisData\data' + '_' + str(resample_num) + '_labels.npy', data0)
+labels = pd.read_csv(path_with_f_name, header=None, usecols=[1]).squeeze()
 
+encoder = preprocessing.LabelEncoder()
+code = encoder.fit_transform(labels)
 
-proprecessing(path=r'E:\competition\AnalysisData\data_train.csv', resample_num=resample_num)
-get_labels(path_with_f_name=r'E:\competition\AnalysisData\label_train.csv',resample_num=resample_num)
-
-
+print('labels', labels.shape)
+np.save(rf'data\processed\{resample_num}labels.npy', labels)
