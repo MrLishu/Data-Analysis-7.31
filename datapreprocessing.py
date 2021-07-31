@@ -15,7 +15,7 @@ processed_data = scaler.fit_transform(data)
 cut_data = processed_data[:, round(data.shape[1] // 20): - round(data.shape[1] // 20)]  # 截取中间90%的数据
 
 for i in range(120):
-    sample = processed_data[i]
+    sample = cut_data[i]
 
     # 重采样, 数据长度resample_num = 512
     resample = signal.resample(sample, resample_num)

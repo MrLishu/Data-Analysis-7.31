@@ -3,12 +3,12 @@ import torch
 import torch.nn as nn
 from torch.nn.init import xavier_uniform_
 from torch.utils.data import TensorDataset, DataLoader
-from datapreprocessing import data_train, data_train_fft, code, scaler, encoder
+from datapreprocessing import data_train_fft, code, scaler, encoder
 from Model import TINet
 
 learning_rate = 0.001
 batch_size = 64
-epochs = 20
+epochs = 30
 
 if torch.cuda.is_available():
     device = 'cuda'
